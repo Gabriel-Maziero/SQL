@@ -127,6 +127,13 @@ SELECT id_autor, COUNT(*) AS total
 FROM livros
 GROUP BY id_autor;
 
+--Total de livros por autor, mostrando os nomes
+SELECT id_autor, COUNT(*) AS qtd_livros
+FROM livros
+ INNER JOIN autores
+  ON livros.id_autor = autores.id
+GROUP BY id_autor;
+
 --Autores com mais de um livro
 SELECT id_autor, COUNT(*) AS total
 FROM livros
