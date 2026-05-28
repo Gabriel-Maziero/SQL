@@ -17,31 +17,52 @@ DROP TABLE IF EXISTS usuarios;
 GO
 
 CREATE TABLE autores (
-    id            INT            IDENTITY(1,1) NOT NULL,
-    nome          NVARCHAR(100)  NOT NULL,
-    nacionalidade NVARCHAR(100)  NOT NULL
+    id               INT            IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    nome             NVARCHAR(100)  NOT NULL,
+    nacionalidade    NVARCHAR(100)  NOT NULL,
+    data_cadastro    DATETIME2      NOT NULL DEFAULT GETDATE()
 );
 
 CREATE TABLE livros (
-    id            INT            IDENTITY(1,1) NOT NULL,
-    id_autor      INT            NOT NULL,
-    nome          NVARCHAR(150)  NOT NULL,
-    qtd_paginas   INT            NOT NULL
+    id               INT            IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    id_autor         INT            NOT NULL,
+    nome             NVARCHAR(150)  NOT NULL UNIQUE,
+    qtd_paginas      INT            NOT NULL,
+    data_cadastro    DATETIME2      NOT NULL DEFAULT GETDATE(),
+
+    CONSTRAINT FK_livros_autores
+        FOREIGN KEY (id_autor)
+        REFERENCES autores(id)
 );
 
 CREATE TABLE usuarios (
-    id    INT            IDENTITY(1,1) NOT NULL,
-    nome  NVARCHAR(100)  NOT NULL,
-    email NVARCHAR(150)  NOT NULL
+    id               INT            IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    nome             NVARCHAR(100)  NOT NULL,
+    email            NVARCHAR(150)  NOT NULL UNIQUE,
+    data_cadastro    DATETIME2      NOT NULL DEFAULT GETDATE()
 );
 
 CREATE TABLE emprestimos (
-    id            INT       IDENTITY(1,1) NOT NULL,
-    id_usuario    INT       NOT NULL,
-    id_livro      INT       NOT NULL,
-    devolvido     BIT       NOT NULL,
-    emprestado_em DATETIME2 NOT NULL,
-    devolvido_em  DATETIME2 NULL
+    id               INT            IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    id_usuario       INT            NOT NULL,
+    id_livro         INT            NOT NULL,
+    devolvido        BIT            NOT NULL DEFAULT 0,
+    emprestado_em    DATETIME2      NOT NULL DEFAULT GETDATE(),
+    devolvido_em     DATETIME2      NULL,
+
+    CONSTRAINT FK_EMPRESTIMOS_USUARIOS
+        FOREIGN KEY (id_usuario)
+        REFERENCES usuarios(id),
+
+    CONSTRAINT FK_EMPRESTIMOS_LIVROS
+        FOREIGN KEY (id_livro)
+        REFERENCES livros(id),
+
+    CONSTRAINT CHK_DATA_DEVOLUCAO
+        CHECK (
+            devolvido_em IS NULL
+            OR devolvido_em >= emprestado_em
+        )
 );
 
 INSERT INTO autores (nome, nacionalidade) VALUES
@@ -82,7 +103,13 @@ INSERT INTO usuarios (nome, email) VALUES
     ('Isabela Carvalho Mendes', 'isabela.mendes@email.com'),
     ('João Pedro Almeida', 'joao.almeida@email.com');
 
-INSERT INTO emprestimos (id_usuario, id_livro, devolvido, emprestado_em, devolvido_em) VALUES
+INSERT INTO emprestimos (
+    id_usuario,
+    id_livro,
+    devolvido,
+    emprestado_em,
+    devolvido_em
+) VALUES
     (1, 1, 1, '2025-01-10', '2025-01-25'),
     (1, 3, 1, '2025-02-05', '2025-02-18'),
     (2, 5, 0, '2025-03-01', NULL),
@@ -97,45 +124,50 @@ INSERT INTO emprestimos (id_usuario, id_livro, devolvido, emprestado_em, devolvi
     (10, 12, 0, '2025-03-12', NULL);
 GO
 
---Mostrar todos os autores
-SELECT * FROM autores
+-- Mostrar todos os autores
+SELECT * FROM autores;
 
---Mostrar os livros com os alunos
-SELECT id_livro FROM emprestimos WHERE devolvido = 0
---SELECT id_livro FROM emprestimos WHERE devolvido_em IS NULL --ver por data
+-- Mostrar os livros emprestados atualmente
+SELECT id_livro
+FROM emprestimos
+WHERE devolvido = 0;
 
---Mostrar um livro pelo nome
-SELECT * FROM livros WHERE nome = 'Dom Casmurro' AND id_autor = '1' --Caso tenha mais de um autor
---SELECT * FROM livros WHERE nome = 'Dom Casmurro' 
---SELECT * FROM livros WHERE nome LIKE '%Dom'
+-- Mostrar um livro pelo nome
+SELECT *
+FROM livros
+WHERE nome = 'Dom Casmurro'
+  AND id_autor = 1;
 
---Listar em ordem alfabetica
-SELECT nome FROM livros
+-- Listar livros em ordem alfabética
+SELECT nome
+FROM livros
 ORDER BY nome;
 
---Retornar qntade de autores cadastrados
+-- Top 10 autores em ordem decrescente
 SELECT TOP 10 nome
 FROM autores
 ORDER BY nome DESC;
 
---Listar qntdade de emprestimos por usuario
-SELECT devolvido FROM emprestimos
+-- Listar empréstimos por usuário
+SELECT id_usuario, devolvido
+FROM emprestimos
 ORDER BY id_usuario;
 
---Total de livros por autor
+-- Total de livros por autor
 SELECT id_autor, COUNT(*) AS total
 FROM livros
 GROUP BY id_autor;
 
---Total de livros por autor, mostrando os nomes
-SELECT id_autor, COUNT(*) AS qtd_livros
+-- Total de livros por autor mostrando nomes
+SELECT autores.nome, COUNT(*) AS qtd_livros
 FROM livros
- INNER JOIN autores
-  ON livros.id_autor = autores.id
-GROUP BY id_autor;
+INNER JOIN autores
+    ON livros.id_autor = autores.id
+GROUP BY autores.nome;
 
---Autores com mais de um livro
+-- Autores com mais de um livro
 SELECT id_autor, COUNT(*) AS total
 FROM livros
 GROUP BY id_autor
 HAVING COUNT(*) > 1;
+
