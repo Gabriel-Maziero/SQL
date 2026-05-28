@@ -18,39 +18,63 @@ GO
 
 -- TABELA USUARIO
 CREATE TABLE usuario(
-id              INT IDENTITY(1,1)     NOT NULL,
-id_cachorro     NVARCHAR(20)          NOT NULL,
+id              INT IDENTITY(1,1)     NOT NULL PRIMARY KEY,
+id_cachorro     INT                   NOT NULL,
 nome            NVARCHAR(100)         NOT NULL, 
-email           NVARCHAR(50)          NOT NULL
+email           NVARCHAR(50)          NOT NULL,
+cadastro        DATETIME2             NOT NULL DEFAULT GETDATE(),
 );
 
 -- TABELA CACHORROS
 CREATE TABLE cachorros(
-id             INT                IDENTITY(1,1)  NOT NULL,
-id_usuario     NVARCHAR(50)       NOT NULL,
+id             INT                IDENTITY(1,1)  NOT NULL PRIMARY KEY,
+id_usuario     INT                NOT NULL,
 nome           NVARCHAR(20)       NOT NULL,
-raca           NVARCHAR(30)       NOT NULL
+raca           NVARCHAR(30)       NOT NULL,
+cadastro       DATETIME2          NOT NULL DEFAULT GETDATE(),
+
+CONSTRAINT FK_cachorros_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES cachorros(id)
 );
 
 -- TABELA PRODUTOS
 CREATE TABLE produtos(
-id                INT              IDENTITY(1,1) NOT NULL,
-id_remedio        NVARCHAR(50)     NOT NULL,
-id_alimentos      NVARCHAR(50)     NOT NULL,
-id_utilitarios    NVARCHAR(50)     NOT NULL,
-num_pedidos       INT              NOT NULL,
-num_entregas      INT              NOT NULL,
+id                INT              IDENTITY(1,1) NOT NULL PRIMARY KEY,
+id_remedio        INT              NULL,
+id_alimentos      INT              NULL,
+id_utilitarios    INT              NULL,
+--num_pedidos       INT              NULL,
+--num_entregas      INT              NULL,
 id_produto        INT              NOT NULL,
-estoque           INT              NOT NULL
+estoque           INT              NOT NULL,
+cadastro          DATETIME2        NOT NULL DEFAULT GETDATE(),
+
+CONSTRAINT FK_estoque_remedio
+        FOREIGN KEY (id_remedio)
+        REFERENCES produtos(id),
+
+CONSTRAINT FK_estoque_alimentos
+        FOREIGN KEY (id_alimentos)
+        REFERENCES produtos(id),
+
+CONSTRAINT FK_usuario_utilitarios
+        FOREIGN KEY (id_utilitarios)
+        REFERENCES produtos(id),
+
+ CONSTRAINT CHK_estoque_produto
+        CHECK (
+           estoque >= 0
+        ),
 );
 
 -- TABELA SERVICOS
 CREATE TABLE servicos(
-id              INT              IDENTITY(1,1) NOT NULL,
+id              INT              IDENTITY(1,1) NOT NULL PRIMARY KEY,
 id_cachorro     NVARCHAR(20)     NOT NULL,
 banho           NVARCHAR(20)     NOT NULL,
 tosa            NVARCHAR(20)     NOT NULL,
-consulta        NVARCHAR(20)     NOT NULL
+consulta        NVARCHAR(20)     NOT NULL,
 );
 
 -- INSERTS USUARIO
@@ -69,7 +93,7 @@ VALUES
 
 -- INSERTS PRODUTOS
 INSERT INTO produtos 
-(id_produto, id_remedio, id_alimentos, id_utilitarios, num_pedidos, num_entregas, estoque)
+(id_produto, id_remedio, id_alimentos, id_utilitarios, estoque)
 VALUES
 (1, 'Vermifugo', 'Racao Premium', 'Coleira', 0, 0, 10),
 (2, 'Antipulgas', 'Biscoito Canino', 'Brinquedo', 0, 0, 0),
@@ -95,32 +119,32 @@ SELECT banho, tosa FROM servicos WHERE id_cachorro IN (1, 2, 3);
 SELECT * FROM produtos;
 
 -- Aumentar pedidos de produtos entregues
-UPDATE produtos
-SET num_pedidos = num_pedidos + 1
-WHERE id_produto = 1;
+--UPDATE produtos
+--SET num_pedidos = num_pedidos + 1
+--WHERE id_produto = 1;
 
-UPDATE produtos
-SET num_pedidos = num_pedidos + 1
-WHERE id_produto = 2;
+--UPDATE produtos
+--SET num_pedidos = num_pedidos + 1
+--WHERE id_produto = 2;
 
-UPDATE produtos
-SET num_pedidos = num_pedidos + 1
-WHERE id_produto = 3;
+--UPDATE produtos
+--SET num_pedidos = num_pedidos + 1
+--WHERE id_produto = 3;
 
-SELECT * FROM produtos;
+--SELECT * FROM produtos;
 
 -- Aumento de entregas
-UPDATE produtos
-SET num_entregas = num_entregas + 1
-WHERE id_produto = 1;
+--UPDATE produtos
+--SET num_entregas = num_entregas + 1
+--WHERE id_produto = 1;
 
-UPDATE produtos
-SET num_entregas = num_entregas + 1
-WHERE id_produto = 2;
+--UPDATE produtos
+--SET num_entregas = num_entregas + 1
+--WHERE id_produto = 2;
 
-UPDATE produtos
-SET num_entregas = num_entregas + 1
-WHERE id_produto = 3;
+--UPDATE produtos
+--SET num_entregas = num_entregas + 1
+--WHERE id_produto = 3;
 
 --Vendas
 UPDATE produtos
